@@ -16,6 +16,12 @@ import com.bumptech.glide.Glide;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Arrays;
+
 import cz.msebera.android.httpclient.Header;
 
 /**
@@ -26,36 +32,19 @@ public class MainActivityFragment extends Fragment {
     public MainActivityFragment() {
     }
 
-    public static String[] imageUrls = {
-            "http://lorempixel.com/492/492/abstract",
-            "http://lorempixel.com/492/492/animals",
-            "http://lorempixel.com/492/492/business",
-            "http://lorempixel.com/492/492/cats",
-            "http://lorempixel.com/492/492/city",
-            "http://lorempixel.com/492/492/food",
-            "http://lorempixel.com/492/492/nightlife",
-            "http://lorempixel.com/492/492/fashion",
-            "http://lorempixel.com/492/492/people",
-            "http://lorempixel.com/492/492/nature",
-            "http://lorempixel.com/492/492/sports",
-            "http://lorempixel.com/492/492/technics",
-            "http://lorempixel.com/492/492/transport"
-    };
+    public static View rootView;
+    public static GridView gridView;
+    public static String[] imageUrls;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-        GridView gridView = (GridView) rootView.findViewById(R.id.grid_view);
-        gridView.setAdapter(new ImageAdapter(getContext(), imageUrls));
-        return rootView;
-    }
+        rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-    @Override
-    public void onStart() {
         FetchMoviesTask fetchMoviesTask = new FetchMoviesTask();
         fetchMoviesTask.execute("popularity");
-        super.onStart();
+
+        return rootView;
     }
 
     public class FetchMoviesTask {
@@ -71,8 +60,14 @@ public class MainActivityFragment extends Fragment {
             client.get(URL, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                    String response = new String(responseBody);
-                    Log.d(LOG_TAG, response);
+                    String JSONResponseString = new String(responseBody);
+                    try {
+                        imageUrls = ParseJSON(JSONResponseString);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    gridView = (GridView) rootView.findViewById(R.id.grid_view);
+                    gridView.setAdapter(new ImageAdapter(getContext(), imageUrls));
                 }
 
                 @Override
@@ -112,6 +107,28 @@ public class MainActivityFragment extends Fragment {
 
             return builder.build().toString();
 
+        }
+
+        private String[] ParseJSON(String JSONResponseString) throws JSONException {
+
+            JSONObject JSONData = new JSONObject(JSONResponseString);
+            JSONArray results = JSONData.getJSONArray("results");
+            String[] posters = new String[results.length()];
+            for (int i = 0; i < results.length(); i++) {
+                JSONObject movie = new JSONObject(results.getString(i));
+                String posterPath = movie.getString("poster_path").substring(1);
+                Uri.Builder builder = new Uri.Builder()
+                        .scheme("https")
+                        .authority("image.tmdb.org")
+                        .appendPath("t")
+                        .appendPath("p")
+                        .appendPath("original")
+                        .appendPath(posterPath)
+                        .appendQueryParameter("api_key", BuildConfig.THE_MOVIE_DATABASE_API_KEY);
+                posters[i] = builder.build().toString();
+            }
+
+            return posters;
         }
 
     }
