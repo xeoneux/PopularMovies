@@ -8,9 +8,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.loopj.android.http.AsyncHttpClient;
@@ -69,6 +71,13 @@ public class MainActivityFragment extends Fragment {
                         posters[i] = movies[i].poster;
                     }
                     gridView.setAdapter(new ImageAdapter(getContext(), posters));
+                    gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                            String title = movies[position].title;
+                            Toast.makeText(getActivity(), title, Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 }
 
                 @Override

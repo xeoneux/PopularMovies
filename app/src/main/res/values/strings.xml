@@ -8,5 +8,6 @@
     <string name="pref_sort_popularity">popularity</string>
     <string name="pref_sort_label_rating">Highest Rated</string>
     <string name="pref_sort_label_popularity">Most Popular</string>
+    <string name="title_activity_detail">DetailActivity</string>
 
 </resources>
