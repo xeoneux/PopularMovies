@@ -20,8 +20,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Arrays;
-
 import cz.msebera.android.httpclient.Header;
 
 /**
@@ -34,16 +32,16 @@ public class MainActivityFragment extends Fragment {
 
     public static View rootView;
     public static GridView gridView;
-    public static String[] imageUrls;
+    public static Movie[] movies;
 
     @Override
+
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_main, container, false);
-
         FetchMoviesTask fetchMoviesTask = new FetchMoviesTask();
         fetchMoviesTask.execute("popularity");
-
+        gridView = (GridView) rootView.findViewById(R.id.grid_view);
         return rootView;
     }
 
@@ -62,12 +60,15 @@ public class MainActivityFragment extends Fragment {
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                     String JSONResponseString = new String(responseBody);
                     try {
-                        imageUrls = ParseJSON(JSONResponseString);
+                        movies = ParseJSON(JSONResponseString);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-                    gridView = (GridView) rootView.findViewById(R.id.grid_view);
-                    gridView.setAdapter(new ImageAdapter(getContext(), imageUrls));
+                    String[] posters = new String[movies.length];
+                    for (int i = 0; i < movies.length; i++) {
+                        posters[i] = movies[i].poster;
+                    }
+                    gridView.setAdapter(new ImageAdapter(getContext(), posters));
                 }
 
                 @Override
@@ -109,13 +110,16 @@ public class MainActivityFragment extends Fragment {
 
         }
 
-        private String[] ParseJSON(String JSONResponseString) throws JSONException {
+        private Movie[] ParseJSON(String JSONResponseString) throws JSONException {
 
             JSONObject JSONData = new JSONObject(JSONResponseString);
             JSONArray results = JSONData.getJSONArray("results");
-            String[] posters = new String[results.length()];
+
+            Movie[] movies = new Movie[results.length()];
+
             for (int i = 0; i < results.length(); i++) {
                 JSONObject movie = new JSONObject(results.getString(i));
+
                 String posterPath = movie.getString("poster_path").substring(1);
                 Uri.Builder builder = new Uri.Builder()
                         .scheme("https")
@@ -125,10 +129,18 @@ public class MainActivityFragment extends Fragment {
                         .appendPath("original")
                         .appendPath(posterPath)
                         .appendQueryParameter("api_key", BuildConfig.THE_MOVIE_DATABASE_API_KEY);
-                posters[i] = builder.build().toString();
+
+                String title = movie.getString("original_title");
+                String poster = builder.build().toString();
+                String synopsis = movie.getString("overview");
+                String userRating = movie.getString("vote_average");
+                String releaseDate = movie.getString("release_date");
+
+                movies[i] = new Movie(title, poster, synopsis, userRating, releaseDate);
+
             }
 
-            return posters;
+            return movies;
         }
 
     }
@@ -173,6 +185,24 @@ public class MainActivityFragment extends Fragment {
             return imageView;
         }
 
+
+    }
+
+    public class Movie {
+
+        public String title;
+        public String poster;
+        public String synopsis;
+        public String userRating;
+        public String releaseDate;
+
+        public Movie(String title, String poster, String synopsis, String userRating, String releaseDate) {
+            this.title = title;
+            this.poster = poster;
+            this.synopsis = synopsis;
+            this.userRating = userRating;
+            this.releaseDate = releaseDate;
+        }
 
     }
 
