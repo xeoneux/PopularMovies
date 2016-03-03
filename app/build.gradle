@@ -17,6 +17,13 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    buildTypes.each {
+        it.buildConfigField 'String', 'THE_MOVIE_DATABASE_API_KEY', MyTheMovieDatabaseApiKey
+    }
+}
+
+repositories {
+    mavenCentral()
 }
 
 dependencies {
@@ -24,4 +31,5 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.2.0'
     compile 'com.android.support:design:23.2.0'
+    compile 'com.loopj.android:android-async-http:1.4.9'
 }
