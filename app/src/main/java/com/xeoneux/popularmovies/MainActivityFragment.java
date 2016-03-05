@@ -1,6 +1,7 @@
 package com.xeoneux.popularmovies;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -12,7 +13,6 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.loopj.android.http.AsyncHttpClient;
@@ -68,14 +68,20 @@ public class MainActivityFragment extends Fragment {
                     }
                     String[] posters = new String[movies.length];
                     for (int i = 0; i < movies.length; i++) {
-                        posters[i] = movies[i].poster;
+                        posters[i] = movies[i].getPoster("w342");
                     }
                     gridView.setAdapter(new ImageAdapter(getContext(), posters));
                     gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                         @Override
                         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                            String title = movies[position].title;
-                            Toast.makeText(getActivity(), title, Toast.LENGTH_SHORT).show();
+                            String poster = movies[position].getPoster("original");
+                            Intent intent = new Intent(getActivity(), DetailActivity.class)
+                                    .putExtra("title", movies[position].title)
+                                    .putExtra("poster", poster)
+                                    .putExtra("synopsis", movies[position].synopsis)
+                                    .putExtra("userRating", movies[position].userRating)
+                                    .putExtra("releaseDate", movies[position].releaseDate);
+                            startActivity(intent);
                         }
                     });
                 }
@@ -128,19 +134,10 @@ public class MainActivityFragment extends Fragment {
 
             for (int i = 0; i < results.length(); i++) {
                 JSONObject movie = new JSONObject(results.getString(i));
-
-                String posterPath = movie.getString("poster_path").substring(1);
-                Uri.Builder builder = new Uri.Builder()
-                        .scheme("https")
-                        .authority("image.tmdb.org")
-                        .appendPath("t")
-                        .appendPath("p")
-                        .appendPath("original")
-                        .appendPath(posterPath)
-                        .appendQueryParameter("api_key", BuildConfig.THE_MOVIE_DATABASE_API_KEY);
+                String posterPath = movie.getString("poster_path");
 
                 String title = movie.getString("original_title");
-                String poster = builder.build().toString();
+                String poster = posterPath.substring(1);
                 String synopsis = movie.getString("overview");
                 String userRating = movie.getString("vote_average");
                 String releaseDate = movie.getString("release_date");
@@ -150,6 +147,7 @@ public class MainActivityFragment extends Fragment {
             }
 
             return movies;
+
         }
 
     }
@@ -180,7 +178,10 @@ public class MainActivityFragment extends Fragment {
             ImageView imageView;
             if (convertView == null) {
                 imageView = new ImageView(context);
-                imageView.setLayoutParams(new GridView.LayoutParams(492, 492));
+                imageView.setLayoutParams(new GridView.LayoutParams(
+                        GridView.LayoutParams.MATCH_PARENT,
+                        369
+                ));
             } else {
                 imageView = (ImageView) convertView;
             }
@@ -211,6 +212,19 @@ public class MainActivityFragment extends Fragment {
             this.synopsis = synopsis;
             this.userRating = userRating;
             this.releaseDate = releaseDate;
+        }
+
+        public String getPoster(String size) {
+            return new Uri.Builder()
+                    .scheme("https")
+                    .authority("image.tmdb.org")
+                    .appendPath("t")
+                    .appendPath("p")
+                    .appendPath(size)
+                    .appendPath(poster)
+                    .appendQueryParameter("api_key", BuildConfig.THE_MOVIE_DATABASE_API_KEY)
+                    .build()
+                    .toString();
         }
 
     }
