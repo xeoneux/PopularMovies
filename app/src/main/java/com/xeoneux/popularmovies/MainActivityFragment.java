@@ -74,7 +74,7 @@ public class MainActivityFragment extends Fragment {
                     gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                         @Override
                         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                            String poster = movies[position].getPoster("original");
+                            String poster = movies[position].getPoster("w780");
                             Intent intent = new Intent(getActivity(), DetailActivity.class)
                                     .putExtra("title", movies[position].title)
                                     .putExtra("poster", poster)
@@ -189,7 +189,6 @@ public class MainActivityFragment extends Fragment {
             Glide
                     .with(context)
                     .load(imageUrls[position])
-                    .centerCrop()
                     .into(imageView);
 
             return imageView;
