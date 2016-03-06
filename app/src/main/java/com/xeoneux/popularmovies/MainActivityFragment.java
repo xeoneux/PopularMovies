@@ -2,7 +2,9 @@ package com.xeoneux.popularmovies;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
@@ -27,24 +29,38 @@ import cz.msebera.android.httpclient.Header;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MainActivityFragment extends Fragment {
+public class MainActivityFragment extends Fragment implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     public MainActivityFragment() {
     }
 
     public static View rootView;
-    public static GridView gridView;
     public static Movie[] movies;
+    public static GridView gridView;
 
     @Override
-
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_main, container, false);
-        FetchMoviesTask fetchMoviesTask = new FetchMoviesTask();
-        fetchMoviesTask.execute("popularity");
         gridView = (GridView) rootView.findViewById(R.id.grid_view);
+        startFetchTask();
+        PreferenceManager.getDefaultSharedPreferences(getContext()).registerOnSharedPreferenceChangeListener(this);
         return rootView;
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        startFetchTask();
+    }
+
+    public void startFetchTask() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String sortType = sharedPreferences.getString(
+                getString(R.string.pref_sort_key),
+                getString(R.string.pref_sort_popularity)
+        );
+        FetchMoviesTask fetchMoviesTask = new FetchMoviesTask();
+        fetchMoviesTask.execute(sortType);
     }
 
     public class FetchMoviesTask {
